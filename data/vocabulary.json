@@ -1,6 +1,0 @@
-{
-    "Programming fundamentals": ["variable", "function", "loop", "array", "conditional"],
-    "Objected-oriented programming": ["class", "object", "inheritance", "polymorphism", "encapsulation"],
-    "programming mechatronics": ["sensor", "actuator", "microcontroller", "firmware", "circuit"]
-
-}
