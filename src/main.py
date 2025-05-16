@@ -17,6 +17,16 @@ class StudyQuest:
     def save_progress(self):
         with open('data/user_progress.json', 'w') as f:
             json.dump(self.user_data, f, indent=2)
+    
+    def test_mvp():
+        app = StudyQuest()
+        print(f"Current Level: {app.user_data['level']}")
+        app.level_system.add_xp(150)
+        app.save_progress()
+        print(f"New XP: {app.user_data['xp']}")
+        if app.user_data['level'] > 1:
+            print("Level Up Unlocked!")
 
 if __name__ == "__main__":
     app = StudyQuest()
+    
