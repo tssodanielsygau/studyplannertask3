@@ -1,42 +1,159 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link
-      rel="stylesheet"
-      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
-      crossorigin="anonymous"
-    />
-    <link
-      rel="stylesheet"
-      href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
-      crossorigin="anonymous"
-    />
+    <title>{% block title %}Matcha Mocha{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --main-color: #87d7ff;
+            --sub-color: #0b223d;
+            --text-color: #f5f5f5;
+            --icon-bg-color: #0b223d;
+            --footer-bg-color: #12283a;
+            --accent-color: #42a5f5;
+            --font-sans: 'DM Sans', sans-serif;
+            --font-serif: 'Inter', sans-serif;
+        }
 
-    <title>{% block title %}Home{% endblock %}</title>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--sub-color);
+            color: var(--text-color);
+            padding: 1rem;
+            text-align: center;
+            font-family: var(--font-serif);
+            font-size: 1.2rem;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: var(--sub-color);
+            padding: 0.8rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 1rem;
+            margin: 0 1.5rem;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        footer {
+            background-color: var(--footer-bg-color);
+            color: var(--text-color);
+            text-align: center;
+            padding: 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 160px);
+            padding: 2rem;
+            background-color: var(--sub-color);
+            border-radius: 10px;
+            margin: 2rem auto;
+            max-width: 800px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 600;
+            color: var(--main-color);
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin: 0.5rem 0 1.5rem 0;
+            font-weight: 400;
+        }
+
+        .icon-row {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .icon {
+            background-color: var(--icon-bg-color);
+            border-radius: 50%;
+            padding: 1.2rem;
+            color: var(--text-color);
+            font-size: 1.6rem;
+            transition: transform 0.3s ease;
+        }
+
+        .icon:hover {
+            transform: scale(1.2);
+            color: var(--accent-color);
+        }
+
+        a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-    {% block content %}
-    {% endblock %}
-    </div>
+    <header>
+        {% block header %} Study Planner {% endblock %}
+    </header>
 
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-      integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-      crossorigin="anonymous"
-    ></script>
-    <script
-        type="text/javascript"
-        src="{{ url_for('static', filename='index.js') }}"
-    ></script>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/login">Login</a>
+        <a href="/sign-up">Sign Up</a>
+    </nav>
+
+    <main>
+        {% block content %}
+        <div>
+            <h1>hi! i'm [your name]</h1>
+            <p>illustrator, animator, and developer</p>
+            <div class="icon-row">
+                <div class="icon">🛈</div>
+                <div class="icon">🔗</div>
+                <div class="icon">📂</div>
+                <div class="icon">❓</div>
+                <div class="icon">✉️</div>
+            </div>
+        </div>
+        {% endblock %}
+    </main>
+
+    <footer>
+        {% block footer %} DANIEL OH 12SEN {% endblock %}
+    </footer>
 </body>
-
 </html>
