@@ -134,13 +134,24 @@
         <a href="/">Home</a>
         <a href="/login">Login</a>
         <a href="/sign-up">Sign Up</a>
+        <a href="/logout">Logout</a>
     </nav>
+
+    {% with messages=get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for message in messages%}
+            <div class="alert alert-danger alter-dismissable fade show">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert">
+                    <span aria-hidden="true">&times;</span>
+            </div>
+        {% endfor %}
+    {%endif%}
+    {% endwith %}
 
     <main>
         {% block content %}
         <div>
-            <h1>hi! i'm [your name]</h1>
-            <p>illustrator, animator, and developer</p>
             <div class="icon-row">
                 <div class="icon">🛈</div>
                 <div class="icon">🔗</div>
