@@ -1,170 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Matcha Mocha{% endblock %}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #1e1e1e;
-            --main-color: #87d7ff;
-            --sub-color: #0b223d;
-            --text-color: #f5f5f5;
-            --icon-bg-color: #0b223d;
-            --footer-bg-color: #12283a;
-            --accent-color: #42a5f5;
-            --font-sans: 'DM Sans', sans-serif;
-            --font-serif: 'Inter', sans-serif;
-        }
+  <meta charset="UTF-8" />
+  <title>{% block title %}Dashboard{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: var(--font-sans);
-            line-height: 1.6;
-        }
-
-        header {
-            background-color: var(--sub-color);
-            color: var(--text-color);
-            padding: 1rem;
-            text-align: center;
-            font-family: var(--font-serif);
-            font-size: 1.2rem;
-        }
-
-        nav {
-            display: flex;
-            justify-content: center;
-            background-color: var(--sub-color);
-            padding: 0.8rem;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        nav a {
-            color: var(--text-color);
-            text-decoration: none;
-            font-size: 1rem;
-            margin: 0 1.5rem;
-            transition: color 0.3s ease, transform 0.3s ease;
-        }
-
-        nav a:hover {
-            color: var(--accent-color);
-            transform: scale(1.1);
-        }
-
-        footer {
-            background-color: var(--footer-bg-color);
-            color: var(--text-color);
-            text-align: center;
-            padding: 0.8rem;
-            font-size: 0.8rem;
-        }
-
-        main {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: calc(100vh - 160px);
-            padding: 2rem;
-            background-color: var(--sub-color);
-            border-radius: 10px;
-            margin: 2rem auto;
-            max-width: 800px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 2.8rem;
-            font-weight: 600;
-            color: var(--main-color);
-        }
-
-        p {
-            font-size: 1.1rem;
-            margin: 0.5rem 0 1.5rem 0;
-            font-weight: 400;
-        }
-
-        .icon-row {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-
-        .icon {
-            background-color: var(--icon-bg-color);
-            border-radius: 50%;
-            padding: 1.2rem;
-            color: var(--text-color);
-            font-size: 1.6rem;
-            transition: transform 0.3s ease;
-        }
-
-        .icon:hover {
-            transform: scale(1.2);
-            color: var(--accent-color);
-        }
-
-        a {
-            color: var(--accent-color);
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  
+  <!-- CSS Link for Flask -->
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
 </head>
+
 <body>
-    <header>
-        {% block header %} Study Planner {% endblock %}
-    </header>
+  <!-- Sidebar -->
+  <div id="mySidebar" class="sidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeSidebar()">×</a>
+    <a href="/">🏠 Home</a>
+    <a href="/calendar">📅 Calendar</a>
+    <a href="/tasks">📝 Tasks</a>
+    <a href="/grades">📊 Grades</a>
+    <a href="/logout">🚪 Logout</a>
+  </div>
 
-    <nav>
-        <a href="/">Home</a>
-        <a href="/login">Login</a>
-        <a href="/sign-up">Sign Up</a>
-        <a href="/logout">Logout</a>
-    </nav>
+  <!-- Open Button -->
+  <div id="sidebarToggle" class="openbtn" onclick="openSidebar()">☰</div>
 
-    {% with messages=get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for message in messages%}
-            <div class="alert alert-danger alter-dismissable fade show">
-                {{ message }}
-                <button type="button" class="close" data-dismiss="alert">
-                    <span aria-hidden="true">&times;</span>
-            </div>
-        {% endfor %}
-    {%endif%}
-    {% endwith %}
+  <!-- Main Content -->
+  <div id="main" class="main">
+    {% block content %}{% endblock %}
+  </div>
 
-    <main>
-        {% block content %}
-        <div>
-            <div class="icon-row">
-                <div class="icon">🛈</div>
-                <div class="icon">🔗</div>
-                <div class="icon">📂</div>
-                <div class="icon">❓</div>
-                <div class="icon">✉️</div>
-            </div>
-        </div>
-        {% endblock %}
-    </main>
+  <!-- JavaScript -->
+  <script>
+    function openSidebar() {
+      document.getElementById("mySidebar").style.width = "250px";
+      document.getElementById("main").style.marginLeft = "250px";
+      document.getElementById("sidebarToggle").style.display = "none";
+    }
 
-    <footer>
-        {% block footer %} DANIEL OH 12SEN {% endblock %}
-    </footer>
+    function closeSidebar() {
+      document.getElementById("mySidebar").style.width = "0";
+      document.getElementById("main").style.marginLeft = "0";
+      document.getElementById("sidebarToggle").style.display = "block";
+    }
+  </script>
 </body>
 </html>
