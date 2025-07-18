@@ -31,7 +31,10 @@
     <h2>Notes</h2>
     <ul class="list-group list-group-flush" id="notes">
       {% for note in user.notes %}
-        <li class="list-group-item" style="display: flex; justify-content: space-between; align-items: center;">
+        <li class="list-group-item"
+            id="note-{{ note.id }}"
+            data-note-id="{{ note.id }}"
+            style="display: flex; justify-content: space-between; align-items: center;">
           {{ note.data }}
           <button type="button" class="close" onclick="deleteNote({{ note.id }})">
             <span aria-hidden="true">&times;</span>
@@ -40,13 +43,14 @@
       {% endfor %}
     </ul>
 
-    <form method="POST" style="margin-top: 1rem;">
+    <form id="note-form" style="margin-top: 1rem;">
       <textarea name="note" id="note" class="form-control" placeholder="Write your note here..."></textarea>
       <br />
       <div align="center">
         <button type="submit" class="button green">Add Note</button>
       </div>
     </form>
+    <div id="note-feedback" style="text-align: center; margin-top: 0.5rem;"></div>
   </div>
 </div>
 
@@ -70,6 +74,47 @@ function updateTime() {
 updateTime();
 setInterval(updateTime, 30000);
 
+// Add note without page refresh
+document.getElementById("note-form").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const noteContent = document.getElementById("note").value.trim();
+  if (!noteContent) return;
+
+  fetch("/add-note", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ note: noteContent })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      const list = document.getElementById("notes");
+      const newItem = document.createElement("li");
+      newItem.className = "list-group-item";
+      newItem.id = `note-${data.id}`;
+      newItem.setAttribute("data-note-id", data.id);
+      newItem.style.display = "flex";
+      newItem.style.justifyContent = "space-between";
+      newItem.style.alignItems = "center";
+      newItem.innerHTML = `
+        ${data.note}
+        <button type="button" class="close" onclick="deleteNote(${data.id})">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      `;
+      list.appendChild(newItem);
+      document.getElementById("note").value = "";
+      document.getElementById("note-feedback").innerText = "";
+    } else {
+      document.getElementById("note-feedback").innerText = "Failed to add note.";
+    }
+  });
+});
+
+// Delete note without page refresh
 function deleteNote(noteId) {
   fetch("/delete-note", {
     method: "POST",
@@ -77,9 +122,17 @@ function deleteNote(noteId) {
     headers: {
       "Content-Type": "application/json"
     }
-  }).then((_res) => {
-    window.location.href = "/";
-  });
+  }).then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const noteElement = document.getElementById(`note-${noteId}`);
+        if (noteElement) {
+          noteElement.remove();
+        }
+      } else {
+        alert("Failed to delete note.");
+      }
+    });
 }
 </script>
 {% endblock %}
