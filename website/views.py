@@ -1,9 +1,8 @@
-from flask import Blueprint, render_template, request, flash, jsonify
+from flask import Blueprint, render_template, request, flash, jsonify, session
 from flask_login import login_required, current_user
 from .models import Note
 from . import db
 import json
-from flask import request, jsonify
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
@@ -14,24 +13,41 @@ views = Blueprint('views', __name__)
 def create_event():
     try:
         data = request.get_json()
+        creds = Credentials(**session['credentials'])  # Use session-stored credentials
 
-        # Example log (remove in prod)
-        print("Received Event:", data)
+        service = build("calendar", "v3", credentials=creds)
 
-        title = data.get("summary")
-        description = data.get("description")
-        start_time = data.get("start", {}).get("dateTime")
-        end_time = data.get("end", {}).get("dateTime")
+        event = {
+            'summary': data.get("summary"),
+            'description': data.get("description"),
+            'start': {
+                'dateTime': data.get("start")["dateTime"],
+                'timeZone': 'Australia/Sydney',
+            },
+            'end': {
+                'dateTime': data.get("end")["dateTime"],
+                'timeZone': 'Australia/Sydney',
+            },
+        }
 
-        # Here you would insert Google Calendar API logic
+        created_event = service.events().insert(calendarId='primary', body=event).execute()
+        session['credentials'] = creds_to_dict(creds)  # Refresh stored credentials if updated
 
-        # Example response
-        return jsonify({"message": f"✅ Event '{title}' created successfully!"}), 200
+        return jsonify({"message": f"✅ Event created: {created_event.get('htmlLink')}"})
 
     except Exception as e:
-        print("Error:", e)
+        print("Error creating event:", e)
         return jsonify({"message": "❌ Failed to create event"}), 500
 
+def creds_to_dict(creds):
+    return {
+        'token': creds.token,
+        'refresh_token': creds.refresh_token,
+        'token_uri': creds.token_uri,
+        'client_id': creds.client_id,
+        'client_secret': creds.client_secret,
+        'scopes': creds.scopes
+    }
 
 @views.route('/', methods=['GET', 'POST'])
 @login_required
