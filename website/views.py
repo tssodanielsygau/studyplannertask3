@@ -1,98 +1,67 @@
-from flask import Blueprint, render_template, request, flash, jsonify, session
+from flask import Blueprint, render_template, request, flash, jsonify, redirect, url_for
 from flask_login import login_required, current_user
 from .models import Note
 from . import db
 import json
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
+from datetime import datetime
+from .auth import get_google_calendar_service
+from dateutil.parser import parse as parse_date
+
 
 views = Blueprint('views', __name__)
 
-@views.route('/create-event', methods=['POST'])
-@login_required
-def create_event():
-    try:
-        data = request.get_json()
-        creds = Credentials(**session['credentials'])  # Use session-stored credentials
-
-        service = build("calendar", "v3", credentials=creds)
-
-        event = {
-            'summary': data.get("summary"),
-            'description': data.get("description"),
-            'start': {
-                'dateTime': data.get("start")["dateTime"],
-                'timeZone': 'Australia/Sydney',
-            },
-            'end': {
-                'dateTime': data.get("end")["dateTime"],
-                'timeZone': 'Australia/Sydney',
-            },
-        }
-
-        created_event = service.events().insert(calendarId='primary', body=event).execute()
-        session['credentials'] = creds_to_dict(creds)  # Refresh stored credentials if updated
-
-        return jsonify({"message": f"✅ Event created: {created_event.get('htmlLink')}"})
-
-    except Exception as e:
-        print("Error creating event:", e)
-        return jsonify({"message": "❌ Failed to create event"}), 500
-
-def creds_to_dict(creds):
-    return {
-        'token': creds.token,
-        'refresh_token': creds.refresh_token,
-        'token_uri': creds.token_uri,
-        'client_id': creds.client_id,
-        'client_secret': creds.client_secret,
-        'scopes': creds.scopes
-    }
+from dateutil.parser import parse as parse_date  # Add to your imports
 
 @views.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
-    if request.method == 'POST': 
-        note = request.form.get('note')#Gets the note from the HTML 
+    events = []
 
+    if request.method == 'POST': 
+        note = request.form.get('note')
         if len(note) < 1:
             flash('Note is too short!', category='error') 
         else:
-            new_note = Note(data=note, user_id=current_user.id)  #providing the schema for the note 
-            db.session.add(new_note) #adding the note to the database 
+            new_note = Note(data=note, user_id=current_user.id)
+            db.session.add(new_note)
             db.session.commit()
             flash('Note added!', category='success')
+            return redirect(url_for('views.home'))
 
-    return render_template("home.html", user=current_user)
+    try:
+        service = get_google_calendar_service()
+        if service:
+            now = datetime.utcnow().isoformat() + 'Z'
+            events_result = service.events().list(
+                calendarId='primary',
+                timeMin=now,
+                maxResults=5,
+                singleEvents=True,
+                orderBy='startTime'
+            ).execute()
+            raw_events = events_result.get('items', [])
 
-@views.route('/calendar')
-@login_required
-def calendar():
-    return render_template("calendar.html", user=current_user)
+            for e in raw_events:
+                start_raw = e.get('start', {}).get('dateTime') or e.get('start', {}).get('date')
+                start_parsed = parse_date(start_raw).strftime("%a, %d %b %Y %I:%M %p") if "T" in start_raw else start_raw
+                events.append({
+                    'summary': e.get('summary', 'No Title'),
+                    'start': start_parsed,
+                    'location': e.get('location', 'No location')
+                })
+    except Exception as e:
+        print(f"⚠️ Google Calendar error: {e}")
 
-@views.route('/add-note', methods=['POST'])
-@login_required
-def add_note():
-    data = request.get_json()
-    note_text = data.get('note', '').strip()
-
-    if note_text:
-        new_note = Note(data=note_text, user_id=current_user.id)
-        db.session.add(new_note)
-        db.session.commit()
-        return jsonify({"success": True, "note": note_text, "id": new_note.id})
-    return jsonify({"success": False}), 400
+    return render_template("home.html", user=current_user, events=events)
 
 @views.route('/delete-note', methods=['POST'])
 @login_required
-def delete_note():
-    data = request.get_json()
-    note_id = data.get('noteId')
+def delete_note():  
+    note = json.loads(request.data)
+    note_id = note['noteId']
     note = Note.query.get(note_id)
-
     if note and note.user_id == current_user.id:
         db.session.delete(note)
         db.session.commit()
         return jsonify({"success": True})
-
-    return jsonify({"success": False}), 400
+    return jsonify({'error': 'Unauthorized'}), 403
