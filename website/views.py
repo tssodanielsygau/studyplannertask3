@@ -23,6 +23,11 @@ def home():
 
     return render_template("home.html", user=current_user)
 
+@views.route('/calendar')
+@login_required
+def calendar():
+    return render_template("calendar.html", user=current_user)
+
 @views.route('/add-note', methods=['POST'])
 @login_required
 def add_note():
