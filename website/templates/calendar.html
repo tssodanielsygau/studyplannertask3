@@ -5,15 +5,85 @@
 <div class="dashboard" style="max-width: none; width: 100%; padding: 0;">
   <h1 style="text-align: center;">📅 My Calendar</h1>
 
-  <div style="display: flex; justify-content: center; margin-top: 2rem;">
+  <!-- Link Calendar Button -->
+  <div style="text-align: center; margin-bottom: 1.5rem;">
+    <a href="{{ url_for('auth.authorize') }}" class="button purple">🔗 Link Google Calendar</a>
+  </div>
+
+  <!-- Calendar and Form in horizontal flex layout -->
+  <div style="display: flex; justify-content: center; align-items: flex-start; gap: 2rem; padding: 2rem; flex-wrap: nowrap;">
+
+    <!-- Google Calendar iframe -->
     <iframe 
       src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=Australia%2FSydney&showPrint=0&title=myCalendar&src=ZG9oQHBhcnJhc3R1LmNhdGhvbGljLmVkdS5hdQ&src=Y19jbGFzc3Jvb20wYzZmNTQzOUBncm91cC5jYWxlbmRhci5nb29nbGUuY29t&src=cGFycmEuY2F0aG9saWMuZWR1LmF1XzM2MzczMjM4MzQzMDM0MzIyZDM1MzEzMkByZXNvdXJjZS5jYWxlbmRhci5nb29nbGUuY29t&color=%23039be5&color=%23c26401&color=%234285f4"
       style="border: 1px solid var(--highlight); border-radius: 12px;"
-      width="1200"
+      width="1000"
       height="600"
       frameborder="0"
       scrolling="no"
     ></iframe>
+
+    <!-- Create Event Form -->
+    <div class="card" style="width: 400px; padding: 1.5rem;">
+      <h2 style="text-align: center;">Create a New Event</h2>
+      <form id="event-form" style="display: flex; flex-direction: column; gap: 1rem;">
+
+        <div>
+          <label for="event-title" style="font-weight: 500;">Title:</label>
+          <input type="text" id="event-title" class="form-control" placeholder="e.g. Study Session" required />
+        </div>
+
+        <div>
+          <label for="event-desc" style="font-weight: 500;">Description:</label>
+          <textarea id="event-desc" class="form-control" rows="2" placeholder="Optional notes..."></textarea>
+        </div>
+
+        <div>
+          <label for="event-start" style="font-weight: 500;">Start Time:</label>
+          <input type="datetime-local" id="event-start" class="form-control" required style="padding: 0.5rem; font-size: 0.95rem;" />
+        </div>
+
+        <div>
+          <label for="event-end" style="font-weight: 500;">End Time:</label>
+          <input type="datetime-local" id="event-end" class="form-control" required style="padding: 0.5rem; font-size: 0.95rem;" />
+        </div>
+
+        <div style="text-align: center;">
+          <button type="submit" class="button green">➕ Create Event</button>
+        </div>
+
+        <div id="event-response" style="margin-top: 0.5rem; text-align: center; font-weight: 500;"></div>
+      </form>
+    </div>
+
   </div>
 </div>
+
+<script>
+document.getElementById("event-form").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const event = {
+    summary: document.getElementById("event-title").value,
+    description: document.getElementById("event-desc").value,
+    start: {
+      dateTime: new Date(document.getElementById("event-start").value).toISOString(),
+      timeZone: "Australia/Sydney",
+    },
+    end: {
+      dateTime: new Date(document.getElementById("event-end").value).toISOString(),
+      timeZone: "Australia/Sydney",
+    },
+  };
+
+  const response = await fetch("/create-event", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(event),
+  });
+
+  const result = await response.json();
+  document.getElementById("event-response").innerText = result.message;
+});
+</script>
 {% endblock %}

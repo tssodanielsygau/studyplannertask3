@@ -3,8 +3,34 @@ from flask_login import login_required, current_user
 from .models import Note
 from . import db
 import json
+from flask import request, jsonify
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
 
 views = Blueprint('views', __name__)
+
+@views.route('/create-event', methods=['POST'])
+@login_required
+def create_event():
+    try:
+        data = request.get_json()
+
+        # Example log (remove in prod)
+        print("Received Event:", data)
+
+        title = data.get("summary")
+        description = data.get("description")
+        start_time = data.get("start", {}).get("dateTime")
+        end_time = data.get("end", {}).get("dateTime")
+
+        # Here you would insert Google Calendar API logic
+
+        # Example response
+        return jsonify({"message": f"✅ Event '{title}' created successfully!"}), 200
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"message": "❌ Failed to create event"}), 500
 
 
 @views.route('/', methods=['GET', 'POST'])
