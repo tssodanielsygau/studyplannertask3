@@ -1,27 +1,19 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
+from flask import Blueprint, render_template, request, flash, redirect, url_for
+from .models import User
 from werkzeug.security import generate_password_hash, check_password_hash
+from . import db   ##means from __init__.py import db
 from flask_login import login_user, login_required, logout_user, current_user
 
-# Google API imports
-import os
-import json
-import datetime
-import google.auth.transport.requests
-from google_auth_oauthlib.flow import Flow
-from googleapiclient.discovery import build
-from google.oauth2.credentials import Credentials
-from .models import User
-from . import db
 
 auth = Blueprint('auth', __name__)
 
-# login route
+
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        
+
         user = User.query.filter_by(email=email).first()
         if user:
             if check_password_hash(user.password, password):
@@ -32,16 +24,17 @@ def login():
                 flash('Incorrect password, try again.', category='error')
         else:
             flash('Email does not exist.', category='error')
+
     return render_template("login.html", user=current_user)
 
-# Logout route
+
 @auth.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('auth.login'))
 
-# Signup route
+
 @auth.route('/sign-up', methods=['GET', 'POST'])
 def sign_up():
     if request.method == 'POST':
@@ -62,8 +55,8 @@ def sign_up():
         elif len(password1) < 7:
             flash('Password must be at least 7 characters.', category='error')
         else:
-            new_user = User(email=email, first_name=first_name,
-                            password=generate_password_hash(password1, method='pbkdf2:sha256'))
+            new_user = User(email=email, first_name=first_name, password=generate_password_hash(
+                password1, method='sha256'))
             db.session.add(new_user)
             db.session.commit()
             login_user(new_user, remember=True)
@@ -71,73 +64,3 @@ def sign_up():
             return redirect(url_for('views.home'))
 
     return render_template("sign_up.html", user=current_user)
-
-# Google OAuth setup
-SCOPES = ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.events']
-CLIENT_SECRETS_FILE = "credentials.json"
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
-
-@auth.route('/authorize')
-@login_required
-def authorize():
-    flow = Flow.from_client_secrets_file(
-        CLIENT_SECRETS_FILE,
-        scopes=SCOPES,
-        redirect_uri=url_for('auth.oauth2callback', _external=True)
-    )
-    authorization_url, state = flow.authorization_url(
-        access_type='offline',
-        include_granted_scopes='true'
-    )
-    session['state'] = state
-    return redirect(authorization_url)
-
-@auth.route('/oauth2callback')
-@login_required
-@login_required
-def oauth2callback():
-    state = session['state']
-    flow = Flow.from_client_secrets_file(
-        CLIENT_SECRETS_FILE,
-        scopes=SCOPES,
-        state=state,
-        redirect_uri=url_for('auth.oauth2callback', _external=True)
-    )
-
-    flow.fetch_token(authorization_response=request.url)
-    credentials = flow.credentials
-    session['credentials'] = {
-        'token': credentials.token,
-        'refresh_token': credentials.refresh_token,
-        'token_uri': credentials.token_uri,
-        'client_id': credentials.client_id,
-        'client_secret': credentials.client_secret,
-        'scopes': credentials.scopes
-    }
-
-    flash("Google Calendar linked successfully!", category="success")
-    return redirect(url_for('views.home'))
-
-def get_calendar_service():
-    if 'credentials' not in session:
-        return None
-
-    creds_data = session['credentials']
-    creds = Credentials(
-        token=creds_data['token'],
-        refresh_token=creds_data['refresh_token'],
-        token_uri=creds_data['token_uri'],
-        client_id=creds_data['client_id'],
-        client_secret=creds_data['client_secret'],
-        scopes=creds_data['scopes']
-    )
-    return build('calendar', 'v3', credentials=creds)
-
-def get_google_calendar_service():
-    if not current_user.is_authenticated or 'credentials' not in session:
-        return None
-
-    creds_data = session['credentials']
-    creds = Credentials.from_authorized_user_info(info=creds_data)
-    service = build('calendar', 'v3', credentials=creds)
-    return service

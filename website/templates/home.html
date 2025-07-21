@@ -1,59 +1,160 @@
 {% extends "base.html" %}
-{% block title %}Home{% endblock %}
-
+{% block title %}Dashboard{% endblock %}
 {% block content %}
-<div class="dashboard">
-  <h1>Hi {{ current_user.first_name }}!</h1>
 
-  <!-- Google Calendar Section -->
-  <div class="card">
-    <h3>📅 Upcoming Google Calendar Events</h3>
-    {% if events %}
-      {% for event in events %}
-        <div class="task">
-          <strong>{{ event.summary }}</strong><br>
-          {{ event.start }}<br>
-          {{ event.location }}
-        </div>
-      {% endfor %}
-    {% else %}
-      <p>No upcoming events found.</p>
-    {% endif %}
+<header class="site-header">
+  <div class="container header-container">
+    <div class="header-left">
+      <button class="menu-button" onclick="openSidebar()">
+        <span class="menu-icon">☰</span>
+      </button>
+      <h1 class="site-title">Study Dashboard</h1>
+    </div>
   </div>
+</header>
 
-  <button class="button pink">View Tasks</button>
-  <button class="button purple">View Grades</button>
-
-  <div class="time-box" id="local-time">
-    Loading time...
+<section id="hero" class="hero-section">
+  <div class="container">
+    <h2 class="hero-title">Hi {{ current_user.first_name }}!</h2>
   </div>
+</section>
 
-  <!-- Notes Section -->
-  <div class="card" style="margin-top: 40px; text-align: left;">
-    <h2 align="center">Notes</h2>
-    <ul class="list-group list-group-flush" id="notes">
-      {% for note in user.notes %}
-        <li class="list-group-item" id="note-{{ note.id }}" style="display: flex; justify-content: space-between; align-items: center;">
-          {{ note.data }}
-          <button type="button" class="close" onclick="deleteNote({{ note.id }})">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </li>
-      {% endfor %}
-    </ul>
+<section id="events" class="events-section">
+  <div class="container">
+    <h3 class="events-title">Upcoming Tasks:</h3>
+    
+    <div style="display: flex; flex-wrap: wrap; gap: 32px;">
+      <!-- Form Column -->
+      <form method="POST" action="/" class="card" style="flex: 1 1 300px; max-width: 400px;">
+        <h4 style="margin: 0 0 1rem;">Add New Event</h4>
+        <input type="text" name="event_name" placeholder="Event title" required />
+        <input type="date" name="event_date" required />
+        <input type="time" name="event_time" required />
+        <input type="text" name="event_location" placeholder="Location (optional)" />
+        <button type="submit" class="button green">Add Event</button>
+      </form>
 
-    <form method="POST" id="note-form">
-      <textarea name="note" id="note" class="form-control" placeholder="Write your note here..."></textarea>
-      <br />
-      <div align="center">
-        <button type="submit" class="button green">Add Note</button>
+      <!-- Events Column -->
+      <div class="events-grid" style="flex: 2 1 600px;">
+        {% if events %}
+          {% for event in events %}
+            <div class="card event-card">
+              <div style="background-color: #3a4142; color: white; padding: 10px; border-radius: 6px 6px 0 0; text-align: center;">
+                <div style="font-size: 14px;">{{ event.date.strftime('%b') }}</div>
+                <div style="font-size: 28px; font-weight: bold;">{{ event.date.strftime('%d') }}</div>
+              </div>
+              <div style="padding: 1rem;">
+                <p style="font-size: 14px; color: var(--text-secondary);">{{ event.date.strftime('%a, %d %b %Y') }} at {{ event.time }}</p>
+                <h2 style="margin: 0; font-size: 20px;">{{ event.name }}</h2>
+                {% if event.location %}
+                  <p style="font-size: 14px; color: var(--text-secondary);">{{ event.location }}</p>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <article class="card event-card">
+            <p>No upcoming events</p>
+          </article>
+        {% endif %}
       </div>
-    </form>
-    <div id="note-feedback" style="text-align: center; margin-top: 0.5rem;"></div>
+    </div>
   </div>
-</div>
+</section>
 
-<!-- JavaScript for Clock and Notes -->
+<main id="main-content" class="main-content-section">
+  <div class="container main-grid">
+    <!-- LEFT COLUMN -->
+    <div class="main-column-left">
+      <section id="reminders" class="card reminders-card">
+        <h3 class="card-title">Reminders:</h3>
+        <p>No reminders yet.</p>
+      </section>
+
+      <section id="grades" class="card grades-card">
+        <h3 class="card-title">Grades:</h3>
+        <div class="grades-table-wrapper">
+          <div class="grades-table">
+            <div class="table-header">Task Name</div>
+            <div class="table-header">Due Date</div>
+            <div class="table-header">Weighting</div>
+            <div class="table-header">Final Mark</div>
+            <div class="table-header">Percentage</div>
+
+            {% for grade in grades %}
+              <div class="table-cell">{{ grade.name }}</div>
+              <div class="table-cell">{{ grade.due_date }}</div>
+              <div class="table-cell">{{ grade.weighting }}</div>
+              <div class="table-cell">{{ grade.final_mark }}</div>
+              <div class="table-cell">{{ grade.percentage }}</div>
+            {% else %}
+              {% for i in range(5 * 8) %}
+                <div class="table-cell"></div>
+              {% endfor %}
+            {% endfor %}
+          </div>
+        </div>
+        <a href="#" class="view-more-link">View more</a>
+      </section>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="main-column-right">
+      <section id="pomodoro" class="card pomodoro-card">
+        <h3 class="card-title-small">Pomodoro Timer:</h3>
+        <div class="timer-widget">
+          <div class="timer-display">
+            <span class="timer-label">SESSION</span>
+            <span class="timer-time" id="time-left">25:00</span>
+          </div>
+          <div class="timer-buttons">
+            <button class="timer-button" id="start-btn">Start</button>
+            <button class="timer-button" id="reset-btn">Reset</button>
+          </div>
+        </div>
+        <div class="timer-controls">
+          <div class="control-group">
+            <button class="control-button">−</button>
+            <span class="control-value">25</span>
+            <button class="control-button">+</button>
+            <label class="control-label">Study Time</label>
+          </div>
+          <div class="control-group">
+            <button class="control-button">−</button>
+            <span class="control-value">5</span>
+            <button class="control-button">+</button>
+            <label class="control-label">Break Time</label>
+          </div>
+        </div>
+      </section>
+
+      <section id="notes" class="card notes-card">
+        <h3 class="card-title">Notes:</h3>
+        <ul id="notes">
+          {% for note in user.notes %}
+            <li id="note-{{ note.id }}">
+              {{ note.data }}
+              <button onclick="deleteNote({{ note.id }})">&times;</button>
+            </li>
+          {% endfor %}
+        </ul>
+        <form method="POST" id="note-form">
+          <textarea name="note" placeholder="Write your note here..."></textarea>
+          <button class="button green" type="submit">Add Note</button>
+        </form>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer id="footer" class="site-footer">
+  <div class="container">
+    <div class="time-card">
+      <p id="local-time">[CURRENT TIME]</p>
+    </div>
+  </div>
+</footer>
+
 <script>
 function updateTime() {
   const options = {
@@ -63,36 +164,27 @@ function updateTime() {
     hour12: true,
     weekday: 'long'
   };
-  const now = new Date();
-  const timeString = now.toLocaleTimeString('en-AU', options);
-  const parts = timeString.split(' ');
-  const hourMin = parts[0];
-  const meridian = parts[1];
-  const day = parts[2]?.toUpperCase() || "";
-  document.getElementById("local-time").innerText = `${hourMin} ${meridian} ${day}`;
+  const now = new Date().toLocaleTimeString('en-AU', options);
+  document.getElementById("local-time").innerText = now;
 }
 updateTime();
 setInterval(updateTime, 30000);
 
-// Delete note without page refresh
 function deleteNote(noteId) {
   fetch("/delete-note", {
     method: "POST",
     body: JSON.stringify({ noteId: noteId }),
-    headers: {
-      "Content-Type": "application/json"
-    }
+    headers: { "Content-Type": "application/json" }
   }).then(response => response.json())
     .then(data => {
       if (data.success) {
         const noteElement = document.getElementById(`note-${noteId}`);
-        if (noteElement) {
-          noteElement.remove();
-        }
+        if (noteElement) noteElement.remove();
       } else {
         alert("Failed to delete note.");
       }
     });
 }
 </script>
+
 {% endblock %}

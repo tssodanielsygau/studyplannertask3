@@ -1,23 +1,26 @@
 document.addEventListener("DOMContentLoaded", () => {
-  let darkmode = localStorage.getItem('darkmode');
   const themeSwitch = document.getElementById('theme-switch');
 
   const enableDarkmode = () => {
     document.body.classList.add('darkmode');
-    localStorage.setItem('darkmode', 'active');
+    localStorage.setItem('darkmode', 'enabled');
   };
 
   const disableDarkmode = () => {
     document.body.classList.remove('darkmode');
-    localStorage.setItem('darkmode', 'null');
+    localStorage.setItem('darkmode', 'disabled');
   };
 
-  if (darkmode === "active") enableDarkmode();
+  // Load stored preference
+  if (localStorage.getItem('darkmode') === 'enabled') {
+    enableDarkmode();
+  }
 
+  // Toggle on click
   if (themeSwitch) {
     themeSwitch.addEventListener('click', () => {
-      darkmode = localStorage.getItem('darkmode');
-      darkmode !== "active" ? enableDarkmode() : disableDarkmode();
+      const darkmode = localStorage.getItem('darkmode');
+      darkmode !== 'enabled' ? enableDarkmode() : disableDarkmode();
     });
   }
 });

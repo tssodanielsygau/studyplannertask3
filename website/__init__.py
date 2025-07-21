@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from os import path
 from flask_login import LoginManager
 from flask_migrate import Migrate
-from .models import db  # 
+from .models import db  # Import db globally
 
 migrate = Migrate()
 
@@ -17,11 +17,14 @@ def create_app():
 
     from .views import views
     from .auth import auth
+    from .models import User, Note  
 
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')
 
-    from .models import User, Note  
+    # Register calendar blueprint (optional for modular routing)
+    from .calendar_routes import calendar_bp
+    app.register_blueprint(calendar_bp, url_prefix='/calendar')
 
     with app.app_context():
         db.create_all()
@@ -37,7 +40,7 @@ def create_app():
     return app
 
 def create_database(app):
-    if not path.exists('website/' + "db.sqlite"):  # Use correct DB file name
+    if not path.exists('website/' + "db.sqlite"):
         with app.app_context():
             db.create_all()
         print('Created Database!')
