@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timedelta
 
 db = SQLAlchemy()
 
@@ -32,4 +32,10 @@ class Reminder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
     due_date = db.Column(db.Date, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+class Pomodoro(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    start_time = db.Column(db.DateTime, nullable=False)
+    duration_minutes = db.Column(db.Integer, default=25)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

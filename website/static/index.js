@@ -1,3 +1,4 @@
+// ---------- MODAL FUNCTIONS ----------
 function openEditModal(id) {
   document.querySelectorAll('.event-modal').forEach(modal => {
     modal.style.display = 'none';
@@ -19,6 +20,7 @@ function closeEventModal() {
   document.getElementById('event-modal').style.display = 'none';
 }
 
+// ---------- LOCAL TIME DISPLAY ----------
 function updateTime() {
   const options = {
     timeZone: "Australia/Sydney",
@@ -31,8 +33,9 @@ function updateTime() {
   document.getElementById("local-time").innerText = now;
 }
 updateTime();
-setInterval(updateTime, 30000);
+setInterval(updateTime, 30000);  // updates every 30 seconds
 
+// ---------- FLASH MESSAGE ----------
 function showFlashMessage(message, category = "info") {
   const container = document.getElementById("flash-messages");
   if (!container) return;
@@ -49,6 +52,7 @@ function showFlashMessage(message, category = "info") {
   }, 3500);
 }
 
+// ---------- EVENT DESCRIPTION TOGGLE ----------
 function toggleDescription(id) {
   const desc = document.getElementById(`desc-${id}`);
   const btn = event.target;
@@ -56,6 +60,7 @@ function toggleDescription(id) {
   btn.textContent = desc.classList.contains('clamp') ? 'Read more' : 'Show less';
 }
 
+// ---------- SCROLL EVENTS CAROUSEL ----------
 function scrollCarousel(direction) {
   const container = document.getElementById('carousel');
   const cardWidth = 280 + 16;
@@ -65,12 +70,13 @@ function scrollCarousel(direction) {
   });
 }
 
+// ---------- DELETE NOTE ----------
 function deleteNote(noteId) {
   fetch("/delete-note", {
     method: "POST",
-    body: JSON.stringify({ noteId: noteId }),
+    body: JSON.stringify({ noteId }),
     headers: { "Content-Type": "application/json" }
-  }).then(response => response.json())
+  }).then(res => res.json())
     .then(data => {
       if (data.success) {
         const noteElement = document.getElementById(`note-${noteId}`);
@@ -81,10 +87,36 @@ function deleteNote(noteId) {
     });
 }
 
+// ---------- DELETE REMINDER ----------
+function deleteReminder(reminderId) {
+  fetch("/delete-reminder", {
+    method: "POST",
+    body: JSON.stringify({ id: reminderId }),
+    headers: { "Content-Type": "application/json" }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      const reminderEl = document.getElementById(`reminder-${reminderId}`);
+      if (reminderEl) reminderEl.remove();
+      showFlashMessage("Reminder deleted.", "success");
+    } else {
+      alert(data.error || "Failed to delete reminder.");
+    }
+  });
+}
+
+// ---------- FORMAT DATE TO dd/mm/yyyy ----------
+function formatDate(isoDate) {
+  const [year, month, day] = isoDate.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+// ---------- DOM READY ----------
 document.addEventListener("DOMContentLoaded", function () {
+  // Add Event
   const form = document.getElementById("event-form");
   const grid = document.querySelector(".events-grid");
-  const modal = document.getElementById("event-modal");
 
   if (form) {
     form.addEventListener("submit", function (e) {
@@ -123,6 +155,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Add Note
   const noteForm = document.getElementById("note-form");
   const noteInput = document.getElementById("note-input");
   const notesList = document.getElementById("notes");
@@ -162,6 +195,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Add Reminder
   const reminderForm = document.getElementById("reminder-form");
   const reminderList = document.getElementById("reminder-list");
 
@@ -211,27 +245,58 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
   }
+
+  // Pomodoro setup
+  document.getElementById("start-btn").addEventListener("click", startTimer);
+  document.getElementById("reset-btn").addEventListener("click", resetTimer);
+  updateDisplay();
 });
 
-function deleteReminder(reminderId) {
-  fetch("/delete-reminder", {
-    method: "POST",
-    body: JSON.stringify({ id: reminderId }),
-    headers: { "Content-Type": "application/json" }
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      const reminderEl = document.getElementById(`reminder-${reminderId}`);
-      if (reminderEl) reminderEl.remove();
-      showFlashMessage("Reminder deleted.", "success");
-    } else {
-      alert(data.error || "Failed to delete reminder.");
-    }
-  });
+// ---------- POMODORO TIMER ----------
+let timerInterval;
+let isSession = true;
+let timeLeft = getStudyTime() * 60;
+
+// Update timer display
+function updateDisplay() {
+  const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+  const secs = (timeLeft % 60).toString().padStart(2, '0');
+  document.getElementById('time-left').textContent = `${mins}:${secs}`;
+  document.querySelector('.timer-label').textContent = isSession ? 'SESSION' : 'BREAK';
 }
 
-function formatDate(isoDate) {
-  const [year, month, day] = isoDate.split("-");
-  return `${day}/${month}/${year}`;
+// Start countdown
+function startTimer() {
+  if (timerInterval) return;
+  timerInterval = setInterval(() => {
+    if (timeLeft > 0) {
+      timeLeft--;
+      updateDisplay();
+    } else {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      isSession = !isSession;
+      timeLeft = (isSession ? getStudyTime() : getBreakTime()) * 60;
+      updateDisplay();
+      startTimer();
+    }
+  }, 1000);
+}
+
+// Reset timer
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  isSession = true;
+  timeLeft = getStudyTime() * 60;
+  updateDisplay();
+}
+
+// Get study and break times
+function getStudyTime() {
+  return parseInt(document.getElementById("study-time").textContent);
+}
+
+function getBreakTime() {
+  return parseInt(document.getElementById("break-time").textContent);
 }

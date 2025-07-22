@@ -170,12 +170,11 @@
     </div>
 
     <!-- RIGHT COLUMN -->
-    <div class="main-column-right">
       <section id="pomodoro" class="card pomodoro-card">
         <h3 class="card-title-small">Pomodoro Timer:</h3>
         <div class="timer-widget">
           <div class="timer-display">
-            <span class="timer-label">SESSION</span>
+            <span class="timer-label" id="session-label">SESSION</span>
             <span class="timer-time" id="time-left">25:00</span>
           </div>
           <div class="timer-buttons">
@@ -185,15 +184,15 @@
         </div>
         <div class="timer-controls">
           <div class="control-group">
-            <button class="control-button">−</button>
-            <span class="control-value">25</span>
-            <button class="control-button">+</button>
+            <button class="control-button" onclick="adjustTime('study', -1)">−</button>
+            <span id="study-time" class="control-value">25</span>
+            <button class="control-button" onclick="adjustTime('study', 1)">+</button>
             <label class="control-label">Study Time</label>
           </div>
           <div class="control-group">
-            <button class="control-button">−</button>
-            <span class="control-value">5</span>
-            <button class="control-button">+</button>
+            <button class="control-button" onclick="adjustTime('break', -1)">−</button>
+            <span id="break-time" class="control-value">5</span>
+            <button class="control-button" onclick="adjustTime('break', 1)">+</button>
             <label class="control-label">Break Time</label>
           </div>
         </div>

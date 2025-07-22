@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, flash, jsonify, redirect, url_for
 from flask_login import login_required, current_user
-from .models import Note, Event, Reminder
+from .models import Note, Event, Reminder, Pomodoro
 from . import db
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import json
 
 views = Blueprint('views', __name__)
@@ -148,3 +148,37 @@ def delete_reminder():
         flash("Reminder deleted.", "success")
         return jsonify(success=True)
     return jsonify({'error': 'Unauthorized'}), 403
+
+@views.route("/start-pomodoro", methods=["POST"])
+@login_required
+def start_pomodoro():
+    duration = int(request.form.get("duration", 25))
+    new_session = Pomodoro(
+        start_time=datetime.utcnow(),
+        duration_minutes=duration,
+        user_id=current_user.id
+    )
+    db.session.add(new_session)
+    db.session.commit()
+    flash(f"Pomodoro started for {duration} minutes!", "success")
+    return redirect(url_for('views.home'))
+
+@views.route("/check-pomodoro", methods=["GET"])
+@login_required
+def check_pomodoro():
+    session = Pomodoro.query.filter_by(user_id=current_user.id).order_by(Pomodoro.start_time.desc()).first()
+    if not session:
+        return jsonify({"active": False})
+
+    now = datetime.utcnow()
+    end_time = session.start_time + timedelta(minutes=session.duration_minutes)
+    remaining = (end_time - now).total_seconds()
+
+    if remaining <= 0:
+        return jsonify({"active": False, "message": "Session complete!"})
+
+    return jsonify({
+        "active": True,
+        "minutes": int(remaining // 60),
+        "seconds": int(remaining % 60)
+    })
