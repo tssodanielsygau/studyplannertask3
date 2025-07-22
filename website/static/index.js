@@ -33,7 +33,7 @@ function updateTime() {
   document.getElementById("local-time").innerText = now;
 }
 updateTime();
-setInterval(updateTime, 30000);  // updates every 30 seconds
+setInterval(updateTime, 30000);
 
 // ---------- FLASH MESSAGE ----------
 function showFlashMessage(message, category = "info") {
@@ -43,9 +43,7 @@ function showFlashMessage(message, category = "info") {
   const flash = document.createElement("div");
   flash.className = `flash-message ${category}`;
   flash.textContent = message;
-
   container.appendChild(flash);
-
   setTimeout(() => {
     flash.style.opacity = "0";
     setTimeout(() => flash.remove(), 300);
@@ -64,49 +62,38 @@ function toggleDescription(id) {
 function scrollCarousel(direction) {
   const container = document.getElementById('carousel');
   const cardWidth = 280 + 16;
-  container.scrollBy({
-    left: direction * cardWidth * 4,
-    behavior: 'smooth'
-  });
+  container.scrollBy({ left: direction * cardWidth * 4, behavior: 'smooth' });
 }
 
-// ---------- DELETE NOTE ----------
+// ---------- DELETE FUNCTIONS ----------
 function deleteNote(noteId) {
   fetch("/delete-note", {
     method: "POST",
     body: JSON.stringify({ noteId }),
     headers: { "Content-Type": "application/json" }
-  }).then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        const noteElement = document.getElementById(`note-${noteId}`);
-        if (noteElement) noteElement.remove();
-      } else {
-        alert("Failed to delete note.");
-      }
-    });
+  }).then(res => res.json()).then(data => {
+    if (data.success) {
+      const noteElement = document.getElementById(`note-${noteId}`);
+      if (noteElement) noteElement.remove();
+    } else alert("Failed to delete note.");
+  });
 }
 
-// ---------- DELETE REMINDER ----------
 function deleteReminder(reminderId) {
   fetch("/delete-reminder", {
     method: "POST",
     body: JSON.stringify({ id: reminderId }),
     headers: { "Content-Type": "application/json" }
-  })
-  .then(res => res.json())
-  .then(data => {
+  }).then(res => res.json()).then(data => {
     if (data.success) {
       const reminderEl = document.getElementById(`reminder-${reminderId}`);
       if (reminderEl) reminderEl.remove();
       showFlashMessage("Reminder deleted.", "success");
-    } else {
-      alert(data.error || "Failed to delete reminder.");
-    }
+    } else alert(data.error || "Failed to delete reminder.");
   });
 }
 
-// ---------- FORMAT DATE TO dd/mm/yyyy ----------
+// ---------- FORMAT DATE ----------
 function formatDate(isoDate) {
   const [year, month, day] = isoDate.split("-");
   return `${day}/${month}/${year}`;
@@ -137,20 +124,13 @@ document.addEventListener("DOMContentLoaded", function () {
           const newCard = div.firstElementChild;
           newCard.style.minWidth = "260px";
           newCard.style.flex = "0 0 auto";
-
           const addCard = document.querySelector(".event-card[onclick]");
           grid.insertBefore(newCard, addCard);
           form.reset();
           closeEventModal();
-
-          setTimeout(() => {
-            newCard.scrollIntoView({ behavior: "smooth", inline: "start" });
-          }, 100);
-
+          setTimeout(() => newCard.scrollIntoView({ behavior: "smooth", inline: "start" }), 100);
           if (data.message) showFlashMessage(data.message, 'success');
-        } else {
-          alert("Error adding event.");
-        }
+        } else alert("Error adding event.");
       });
     });
   }
@@ -164,10 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
     noteForm.addEventListener("submit", function (e) {
       e.preventDefault();
       const note = noteInput.value.trim();
-      if (note.length < 1) {
-        alert("Note is too short.");
-        return;
-      }
+      if (note.length < 1) return alert("Note is too short.");
 
       fetch("/", {
         method: "POST",
@@ -180,17 +157,11 @@ document.addEventListener("DOMContentLoaded", function () {
           const newNote = document.createElement("li");
           newNote.id = `note-${data.note_id}`;
           newNote.style = "margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;";
-          newNote.innerHTML = `
-            <span>${note}</span>
-            <button onclick="deleteNote(${data.note_id})"
-                    style="background: none; border: none; color: var(--text-secondary); font-size: 20px; cursor: pointer;">&times;</button>
-          `;
+          newNote.innerHTML = `<span>${note}</span><button onclick="deleteNote(${data.note_id})" style="background: none; border: none; color: var(--text-secondary); font-size: 20px; cursor: pointer;">&times;</button>`;
           notesList.prepend(newNote);
           noteInput.value = "";
           showFlashMessage("Note added!", "success");
-        } else {
-          alert("Error adding note.");
-        }
+        } else alert("Error adding note.");
       });
     });
   }
@@ -202,16 +173,12 @@ document.addEventListener("DOMContentLoaded", function () {
   if (reminderForm) {
     reminderForm.addEventListener("submit", function (e) {
       e.preventDefault();
-
       const contentInput = reminderForm.querySelector('input[name="reminder_content"]');
       const dueInput = reminderForm.querySelector('input[name="reminder_due"]');
       const content = contentInput.value.trim();
       const due_date = dueInput.value;
 
-      if (!content || !due_date) {
-        alert("Both content and due date are required.");
-        return;
-      }
+      if (!content || !due_date) return alert("Both content and due date are required.");
 
       fetch("/add-reminder", {
         method: "POST",
@@ -224,31 +191,28 @@ document.addEventListener("DOMContentLoaded", function () {
           const newReminder = document.createElement("li");
           newReminder.id = `reminder-${data.id}`;
           newReminder.style = "display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem 1rem; background-color: var(--bg-secondary); color: var(--text-primary);";
-          newReminder.innerHTML = `
-            <div>
-              <div style="font-size: 1rem; font-weight: 500;">${data.content}</div>
-              <div style="font-size: 0.85rem; color: var(--text-secondary);">
-                Due: ${formatDate(data.due)} — 
-                <span>${data.days_left} days left</span>
-              </div>
-            </div>
-            <button onclick="deleteReminder(${data.id})"
-                    style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer;">&times;</button>
-          `;
+          newReminder.innerHTML = `<div><div style="font-size: 1rem; font-weight: 500;">${data.content}</div><div style="font-size: 0.85rem; color: var(--text-secondary);">Due: ${formatDate(data.due)} — <span>${data.days_left} days left</span></div></div><button onclick="deleteReminder(${data.id})" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer;">&times;</button>`;
           reminderList.appendChild(newReminder);
           contentInput.value = "";
           dueInput.value = "";
           showFlashMessage("Reminder added!", "success");
-        } else {
-          alert(data.error || "Error adding reminder.");
-        }
+        } else alert(data.error || "Error adding reminder.");
       });
     });
   }
 
-  // Pomodoro setup
+  // Pomodoro Controls
   document.getElementById("start-btn").addEventListener("click", startTimer);
   document.getElementById("reset-btn").addEventListener("click", resetTimer);
+
+  document.querySelectorAll(".control-group")[0].querySelectorAll("button").forEach((btn, i) => {
+    btn.addEventListener("click", () => adjustTime("study", i === 0 ? -1 : 1));
+  });
+
+  document.querySelectorAll(".control-group")[1].querySelectorAll("button").forEach((btn, i) => {
+    btn.addEventListener("click", () => adjustTime("break", i === 0 ? -1 : 1));
+  });
+
   updateDisplay();
 });
 
@@ -257,17 +221,22 @@ let timerInterval;
 let isSession = true;
 let timeLeft = getStudyTime() * 60;
 
-// Update timer display
 function updateDisplay() {
-  const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-  const secs = (timeLeft % 60).toString().padStart(2, '0');
-  document.getElementById('time-left').textContent = `${mins}:${secs}`;
-  document.querySelector('.timer-label').textContent = isSession ? 'SESSION' : 'BREAK';
+  const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+  const seconds = (timeLeft % 60).toString().padStart(2, '0');
+  document.getElementById("time-left").textContent = `${minutes}:${seconds}`;
+  document.getElementById("session-type").textContent = isSession ? "Study" : "Break";
 }
 
-// Start countdown
 function startTimer() {
-  if (timerInterval) return;
+  const startBtn = document.getElementById("start-btn");
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    startBtn.textContent = "Start";
+    return;
+  }
+  startBtn.textContent = "Stop";
   timerInterval = setInterval(() => {
     if (timeLeft > 0) {
       timeLeft--;
@@ -283,20 +252,30 @@ function startTimer() {
   }, 1000);
 }
 
-// Reset timer
 function resetTimer() {
   clearInterval(timerInterval);
   timerInterval = null;
+  document.getElementById("start-btn").textContent = "Start";
   isSession = true;
   timeLeft = getStudyTime() * 60;
   updateDisplay();
 }
 
-// Get study and break times
 function getStudyTime() {
   return parseInt(document.getElementById("study-time").textContent);
 }
 
 function getBreakTime() {
   return parseInt(document.getElementById("break-time").textContent);
+}
+
+function adjustTime(type, delta) {
+  const el = document.getElementById(`${type}-time`);
+  let value = parseInt(el.textContent);
+  value = Math.max(1, value + delta);
+  el.textContent = value;
+  if ((type === 'study' && isSession) || (type === 'break' && !isSession)) {
+    timeLeft = value * 60;
+    updateDisplay();
+  }
 }

@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, jsonify, redirect, url_for
 from flask_login import login_required, current_user
-from .models import Note, Event, Reminder, Pomodoro
+from .models import Note, Event, Reminder, Pomodoro, Grade
 from . import db
 from datetime import datetime, date, timedelta
 import json
@@ -56,8 +56,15 @@ def home():
     reminders = Reminder.query.filter_by(user_id=current_user.id).order_by(Reminder.due_date).all()
     now = date.today()
     events = Event.query.filter_by(user_id=current_user.id).order_by(Event.date).all()
+    grades = Grade.query.filter_by(user_id=current_user.id).order_by(Grade.due_date).all()
+    for grade in grades:
+        if isinstance(grade.due_date, str):
+            try:
+                grade.due_date = datetime.strptime(grade.due_date, "%Y-%m-%d").date()
+            except ValueError:
+                pass
 
-    return render_template("home.html", user=current_user, events=events, reminders=reminders, now=now)
+    return render_template("home.html", user=current_user, events=events, reminders=reminders, now=now, grades=grades)
 
 @views.route('/delete-event', methods=['POST'])
 @login_required
@@ -182,3 +189,54 @@ def check_pomodoro():
         "minutes": int(remaining // 60),
         "seconds": int(remaining % 60)
     })
+    
+@views.route('/grades', methods=['GET'])
+@login_required
+def grades():
+    grades = Grade.query.filter_by(user_id=current_user.id).order_by(Grade.due_date).all()
+    return render_template("grades.html", user=current_user, grades=grades)
+
+@views.route('/add-grade', methods=['POST'])
+@login_required
+def add_grade():
+    name = request.form.get("name")
+    due_date = request.form.get("due_date")
+    weighting = request.form.get("weighting")
+    final_mark = request.form.get("final_mark")
+    percentage = request.form.get("percentage")
+
+    if not name or not due_date:
+        flash("Please fill out all required fields.", "error")
+        return redirect(url_for('views.grades'))
+
+    new_grade = Grade(
+        name=name,
+        due_date=due_date,
+        weighting=weighting,
+        final_mark=final_mark,
+        percentage=percentage,
+        user_id=current_user.id
+    )
+    db.session.add(new_grade)
+    db.session.commit()
+    flash("Grade added!", "success")
+    return redirect(url_for('views.grades'))
+
+@views.route('/edit-grade/<int:grade_id>', methods=['POST'])
+@login_required
+def edit_grade(grade_id):
+    grade = Grade.query.get_or_404(grade_id)
+
+    if grade.user_id != current_user.id:
+        flash("Unauthorized action", "error")
+        return redirect(url_for('views.grades'))
+
+    grade.name = request.form.get("name")
+    grade.due_date = request.form.get("due_date")
+    grade.weighting = request.form.get("weighting")
+    grade.final_mark = request.form.get("final_mark")
+    grade.percentage = request.form.get("percentage")
+
+    db.session.commit()
+    flash("Grade updated!", "success")
+    return redirect(url_for('views.grades'))

@@ -12,6 +12,7 @@ class User(db.Model, UserMixin):
     reminders = db.relationship('Reminder', backref='user', lazy=True)
     notes = db.relationship('Note', backref='user', lazy=True)
     events = db.relationship('Event', backref='user', lazy=True)
+    grades = db.relationship('Grade', backref='user', lazy=True)
 
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -38,4 +39,13 @@ class Pomodoro(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     start_time = db.Column(db.DateTime, nullable=False)
     duration_minutes = db.Column(db.Integer, default=25)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+class Grade(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), nullable=False)
+    due_date = db.Column(db.String(50))
+    weighting = db.Column(db.String(50))
+    final_mark = db.Column(db.String(50))
+    percentage = db.Column(db.String(50))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

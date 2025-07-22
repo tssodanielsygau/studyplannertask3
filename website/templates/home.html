@@ -142,39 +142,50 @@
         </form>
       </section>
 
+    <!-- RIGHT COLUMN -->
+    <div class="main-column-right">
       <section id="grades" class="card grades-card">
         <h3 class="card-title">Grades:</h3>
         <div class="grades-table-wrapper">
-          <div class="grades-table">
-            <div class="table-header">Task Name</div>
-            <div class="table-header">Due Date</div>
-            <div class="table-header">Weighting</div>
-            <div class="table-header">Final Mark</div>
-            <div class="table-header">Percentage</div>
-
-            {% for grade in grades %}
-              <div class="table-cell">{{ grade.name }}</div>
-              <div class="table-cell">{{ grade.due_date }}</div>
-              <div class="table-cell">{{ grade.weighting }}</div>
-              <div class="table-cell">{{ grade.final_mark }}</div>
-              <div class="table-cell">{{ grade.percentage }}</div>
-            {% else %}
-              {% for i in range(5 * 8) %}
-                <div class="table-cell"></div>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="text-align: left; border-bottom: 1px solid var(--border-color);">
+                <th style="padding: 0.5rem;">Task Name</th>
+                <th style="padding: 0.5rem;">Due Date</th>
+                <th style="padding: 0.5rem;">Weighting</th>
+                <th style="padding: 0.5rem;">Final Mark</th>
+                <th style="padding: 0.5rem;">Percentage</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for grade in grades[:3] %}
+              <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;">{{ grade.name }}</td>
+                <td style="padding: 0.5rem;">{{ grade.due_date.strftime('%d/%m/%Y') }}</td>
+                <td style="padding: 0.5rem;">{{ grade.weighting }}</td>
+                <td style="padding: 0.5rem;">{{ grade.final_mark }}</td>
+                <td style="padding: 0.5rem;">{{ grade.percentage }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="5" style="padding: 0.5rem; color: var(--text-secondary); text-align: center;">No grades added yet.</td>
+              </tr>
               {% endfor %}
-            {% endfor %}
-          </div>
+            </tbody>
+          </table>
         </div>
-        <a href="#" class="view-more-link">View more</a>
+        <a href="/grades" class="view-more-link" style="display: inline-block; margin-top: 1rem; color: var(--text-secondary);">View more</a>
       </section>
+
+    </div>
     </div>
 
     <!-- RIGHT COLUMN -->
-      <section id="pomodoro" class="card pomodoro-card">
+    <section id="pomodoro" class="card pomodoro-card" style="padding: 1rem; max-height: 450px; overflow: hidden;">
         <h3 class="card-title-small">Pomodoro Timer:</h3>
         <div class="timer-widget">
           <div class="timer-display">
-            <span class="timer-label" id="session-label">SESSION</span>
+            <span class="timer-label">SESSION</span>
             <span class="timer-time" id="time-left">25:00</span>
           </div>
           <div class="timer-buttons">
@@ -184,15 +195,15 @@
         </div>
         <div class="timer-controls">
           <div class="control-group">
-            <button class="control-button" onclick="adjustTime('study', -1)">−</button>
-            <span id="study-time" class="control-value">25</span>
-            <button class="control-button" onclick="adjustTime('study', 1)">+</button>
+            <button class="control-button">−</button>
+            <span class="control-value" id="study-time">25</span>
+            <button class="control-button">+</button>
             <label class="control-label">Study Time</label>
           </div>
           <div class="control-group">
-            <button class="control-button" onclick="adjustTime('break', -1)">−</button>
-            <span id="break-time" class="control-value">5</span>
-            <button class="control-button" onclick="adjustTime('break', 1)">+</button>
+            <button class="control-button">−</button>
+            <span class="control-value" id="break-time">5</span>
+            <button class="control-button">+</button>
             <label class="control-label">Break Time</label>
           </div>
         </div>

@@ -1,4 +1,94 @@
 {% extends "base.html" %}
 {% block title %}Grades{% endblock %}
-
 {% block content %}
+
+<header class="site-header">
+  <div class="container header-container">
+    <div class="header-left">
+      <a href="/" class="menu-button" aria-label="Back to dashboard">← Back</a>
+      <h1 class="site-title">All Grades</h1>
+    </div>
+  </div>
+</header>
+
+<main class="main-content-section">
+  <div class="container">
+
+    <section class="card grades-card" style="margin-bottom: 2rem;">
+      <h3 class="card-title">Add New Grade:</h3>
+      <form method="POST" action="/add-grade" style="display: flex; flex-direction: column; gap: 1rem;">
+        <input type="text" name="name" placeholder="Task Name" required class="form-input"
+               style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);">
+        <input type="date" name="due_date" required class="form-input"
+               style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);">
+        <input type="text" name="weighting" placeholder="Weighting" required class="form-input"
+               style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);">
+        <input type="text" name="final_mark" placeholder="Final Mark" required class="form-input"
+               style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);">
+        <input type="text" name="percentage" placeholder="Percentage" required class="form-input"
+               style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);">
+        <button type="submit" class="button"
+                style="align-self: flex-end; padding: 0.6rem 1.2rem; border-radius: 8px;
+                       background-color: var(--border-dark); color: var(--bg-primary);
+                       border: none; font-weight: 500; cursor: pointer;">
+          Add Grade
+        </button>
+      </form>
+    </section>
+
+    <section class="card grades-card">
+      <h3 class="card-title">Your Grades:</h3>
+      <div class="grades-table-wrapper" style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+              <th style="text-align: left; padding: 0.5rem;">Task Name</th>
+              <th style="text-align: left; padding: 0.5rem;">Due Date</th>
+              <th style="text-align: left; padding: 0.5rem;">Weighting</th>
+              <th style="text-align: left; padding: 0.5rem;">Final Mark</th>
+              <th style="text-align: left; padding: 0.5rem;">Percentage</th>
+              <th style="text-align: left; padding: 0.5rem;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for grade in grades %}
+              <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;"><input type="text" value="{{ grade.name }}" class="form-input" form="form-{{ grade.id }}" name="name" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);" disabled></td>
+                <td style="padding: 0.5rem;"><input type="date" value="{{ grade.due_date }}" class="form-input" form="form-{{ grade.id }}" name="due_date" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);" disabled></td>
+                <td style="padding: 0.5rem;"><input type="text" value="{{ grade.weighting }}" class="form-input" form="form-{{ grade.id }}" name="weighting" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);" disabled></td>
+                <td style="padding: 0.5rem;"><input type="text" value="{{ grade.final_mark }}" class="form-input" form="form-{{ grade.id }}" name="final_mark" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);" disabled></td>
+                <td style="padding: 0.5rem;"><input type="text" value="{{ grade.percentage }}" class="form-input" form="form-{{ grade.id }}" name="percentage" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);" disabled></td>
+                <td style="padding: 0.5rem;">
+                  <form method="POST" action="/edit-grade/{{ grade.id }}" id="form-{{ grade.id }}">
+                    <button type="button" class="button edit-btn" onclick="enableEdit(this)" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">Edit</button>
+                    <button type="submit" class="button save-btn" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; display: none;">Save</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="6" style="padding: 0.5rem; color: var(--text-secondary); text-align: center;">
+                  No grades added yet.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+  function enableEdit(button) {
+    const row = button.closest("tr");
+    const inputs = row.querySelectorAll("input");
+    inputs.forEach(input => input.removeAttribute("disabled"));
+    const saveBtn = row.querySelector(".save-btn");
+    button.style.display = "none";
+    if (saveBtn) saveBtn.style.display = "inline-block";
+  }
+</script>
+
+{% endblock %}
