@@ -2,69 +2,75 @@ from flask import Blueprint, render_template, request, flash, jsonify, redirect,
 from flask_login import login_required, current_user
 from .models import Note, Event
 from . import db
-import json
 from datetime import datetime
+import json
 
 views = Blueprint('views', __name__)
 
 @views.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
-    if request.method == 'POST':
-        # Handle JS-based Note POST
-        if request.is_json:
-            data = request.get_json()
-            note_text = data.get('note', '').strip()
-            if len(note_text) < 1:
-                return jsonify(success=False, error="Note too short.")
-            new_note = Note(data=note_text, user_id=current_user.id)
-            db.session.add(new_note)
-            db.session.commit()
+    # Handle JSON AJAX Note Submission
+    if request.is_json:
+        data = request.get_json()
+        note_text = data.get('note', '').strip()
+        if len(note_text) < 1:
+            return jsonify({'success': False, 'error': 'Note too short'})
+        new_note = Note(data=note_text, user_id=current_user.id)
+        db.session.add(new_note)
+        db.session.commit()
+        return jsonify({'success': True, 'note_id': new_note.id})
 
-            # Dynamically return note HTML
-            note_html = f"""
-            <li id="note-{new_note.id}">
-                {new_note.data}
-                <button onclick="deleteNote({new_note.id})">&times;</button>
-            </li>
-            """
-            return jsonify(success=True, note_html=note_html)
+    # Handle AJAX Event Form Submission
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        title = request.form.get("event_title")
+        date_str = request.form.get("event_date")
+        time = request.form.get("event_time")
+        location = request.form.get("event_location")
+        description = request.form.get("event_description")
 
-        # Handle standard form submissions
-        elif 'note' in request.form:
-            note = request.form.get('note')
-            if len(note) < 1:
-                flash('Note is too short!', category='error')
-            else:
-                new_note = Note(data=note, user_id=current_user.id)
-                db.session.add(new_note)
-                db.session.commit()
-                flash('Note added!', category='success')
-                return redirect(url_for('views.home'))
+        if not title or not date_str:
+            return jsonify({'success': False, 'error': 'Title and date required'})
 
-        elif 'event-title' in request.form:
-            title = request.form.get('event-title')
-            date = request.form.get('event-date')
-            time = request.form.get('event-time')
-            location = request.form.get('event-location')
+        try:
+            date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            return jsonify({'success': False, 'error': 'Invalid date format'})
 
-            if len(title) < 1 or len(date) < 1:
-                flash('Event title and date are required.', category='error')
-            else:
-                new_event = Event(name=title, date=date, time=time, location=location, user_id=current_user.id)
-                db.session.add(new_event)
-                db.session.commit()
-                flash('Event added!', category='success')
-                return redirect(url_for('views.home'))
+        new_event = Event(
+            title=title,
+            date=date,
+            time=time,
+            location=location,
+            description=description,
+            user_id=current_user.id
+        )
+        db.session.add(new_event)
+        db.session.commit()
 
-    events = Event.query.filter_by(user_id=current_user.id).order_by(Event.date, Event.time).all()
+        # Return rendered event card HTML
+        html = render_template("event_card.html", event=new_event)
+        return jsonify({'success': True, 'html': html})
+
+    events = Event.query.filter_by(user_id=current_user.id).order_by(Event.date).all()
     return render_template("home.html", user=current_user, events=events)
+
+@views.route('/delete-event', methods=['POST'])
+@login_required
+def delete_event():
+    event_id = request.form.get("event_id")
+    event = Event.query.get(event_id)
+    if event and event.user_id == current_user.id:
+        db.session.delete(event)
+        db.session.commit()
+        flash("Event deleted.", "success")
+    return redirect(url_for("views.home"))
 
 @views.route('/delete-note', methods=['POST'])
 @login_required
 def delete_note():
-    note = json.loads(request.data)
-    note_id = note['noteId']
+    data = json.loads(request.data)
+    note_id = data.get('noteId')
     note = Note.query.get(note_id)
     if note and note.user_id == current_user.id:
         db.session.delete(note)
@@ -72,13 +78,27 @@ def delete_note():
         return jsonify(success=True)
     return jsonify({'error': 'Unauthorized'}), 403
 
-@views.route('/delete-event', methods=['POST'])
+@views.route('/edit-event/<int:id>', methods=['POST'])
 @login_required
-def delete_event():
-    event_id = request.form.get('event_id')
-    event = Event.query.get(event_id)
-    if event and event.user_id == current_user.id:
-        db.session.delete(event)
+def edit_event(id):
+    event = Event.query.get_or_404(id)
+    if event.user_id != current_user.id:
+        flash("Unauthorized", "error")
+        return redirect(url_for('views.home'))
+
+    title = request.form.get('event_title')
+    date_str = request.form.get('event_date')
+    time = request.form.get('event_time')
+    location = request.form.get('event_location')
+
+    try:
+        event.title = title
+        event.date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        event.time = time
+        event.location = location
         db.session.commit()
-        flash("Event deleted.", "success")
+        flash("Event updated!", "success")
+    except Exception as e:
+        flash("Error updating event.", "error")
+
     return redirect(url_for('views.home'))

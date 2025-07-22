@@ -1,0 +1,25 @@
+<div class="card event-card" style="width: 280px; position: relative;">
+  <div style="background-color: #3a4142; color: white; padding: 10px; text-align: center; border-radius: 6px 6px 0 0;">
+    <div style="font-size: 14px;">{{ event.date.strftime('%b') }}</div>
+    <div style="font-size: 24px; font-weight: bold;">{{ event.date.strftime('%d') }}</div>
+  </div>
+  <div style="padding: 1rem;">
+    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">
+      {{ event.date.strftime('%a, %d %b %Y') }} at {{ event.time }}
+    </p>
+    <h2 style="margin: 0 0 4px; font-size: 18px;">{{ event.title }}</h2>
+    {% if event.description %}
+      <p style="font-size: 14px;">{{ event.description }}</p>
+    {% endif %}
+    {% if event.location %}
+      <p style="font-size: 14px; color: var(--text-secondary);">{{ event.location }}</p>
+    {% endif %}
+  </div>
+  <div style="position: absolute; top: 8px; right: 8px; display: flex; gap: 4px;">
+    <button onclick="openEditModal({{ event.id }})" class="edit-btn" style="background: none; border: none; cursor: pointer;">✏</button>
+    <form method="POST" action="/delete-event">
+      <input type="hidden" name="event_id" value="{{ event.id }}">
+      <button type="submit" class="delete-btn" style="background: none; border: none; cursor: pointer;">🗑</button>
+    </form>
+  </div>
+</div>

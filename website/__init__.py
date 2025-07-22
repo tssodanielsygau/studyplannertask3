@@ -22,10 +22,6 @@ def create_app():
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')
 
-    # Register calendar blueprint (optional for modular routing)
-    from .calendar_routes import calendar_bp
-    app.register_blueprint(calendar_bp, url_prefix='/calendar')
-
     with app.app_context():
         db.create_all()
 
