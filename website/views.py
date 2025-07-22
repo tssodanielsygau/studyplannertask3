@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, flash, jsonify, redirect, url_for
 from flask_login import login_required, current_user
-from .models import Note, Event
+from .models import Note, Event, Reminder
 from . import db
-from datetime import datetime
+from datetime import datetime, date
 import json
 
 views = Blueprint('views', __name__)
@@ -34,13 +34,13 @@ def home():
             return jsonify({'success': False, 'error': 'Title and date required'})
 
         try:
-            date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            parsed_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         except ValueError:
             return jsonify({'success': False, 'error': 'Invalid date format'})
 
         new_event = Event(
             title=title,
-            date=date,
+            date=parsed_date,
             time=time,
             location=location,
             description=description,
@@ -53,8 +53,11 @@ def home():
         html = render_template("event_card.html", event=new_event)
         return jsonify({'success': True, 'html': html, 'message': 'Event added!'})
 
+    reminders = Reminder.query.filter_by(user_id=current_user.id).order_by(Reminder.due_date).all()
+    now = date.today()
     events = Event.query.filter_by(user_id=current_user.id).order_by(Event.date).all()
-    return render_template("home.html", user=current_user, events=events)
+
+    return render_template("home.html", user=current_user, events=events, reminders=reminders, now=now)
 
 @views.route('/delete-event', methods=['POST'])
 @login_required
@@ -108,3 +111,40 @@ def edit_event(id):
         flash("Error updating event.", "error")
 
     return redirect(url_for('views.home'))
+
+@views.route('/add-reminder', methods=['POST'])
+@login_required
+def add_reminder():
+    data = request.get_json()
+    content = data.get("content", "").strip()
+    due_str = data.get("due_date", "").strip()
+
+    if not content or not due_str:
+        return jsonify(success=False, error="Missing fields")
+
+    try:
+        due_date = datetime.strptime(due_str, "%Y-%m-%d").date()
+    except ValueError:
+        return jsonify(success=False, error="Invalid date format")
+
+    new_reminder = Reminder(content=content, due_date=due_date, user_id=current_user.id)
+    db.session.add(new_reminder)
+    db.session.commit()
+
+    days_left = (due_date - date.today()).days
+    flash("Reminder added!", "success")
+
+    return jsonify(success=True, id=new_reminder.id, content=content, due=due_str, days_left=days_left)
+
+@views.route('/delete-reminder', methods=['POST'])
+@login_required
+def delete_reminder():
+    data = json.loads(request.data)
+    reminder_id = data.get('id')
+    reminder = Reminder.query.get(reminder_id)
+    if reminder and reminder.user_id == current_user.id:
+        db.session.delete(reminder)
+        db.session.commit()
+        flash("Reminder deleted.", "success")
+        return jsonify(success=True)
+    return jsonify({'error': 'Unauthorized'}), 403

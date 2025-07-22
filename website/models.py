@@ -9,7 +9,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(150), unique=True)
     password = db.Column(db.String(150))
     first_name = db.Column(db.String(150))
-    
+    reminders = db.relationship('Reminder', backref='user', lazy=True)
     notes = db.relationship('Note', backref='user', lazy=True)
     events = db.relationship('Event', backref='user', lazy=True)
 
@@ -27,3 +27,9 @@ class Event(db.Model):
     location = db.Column(db.String(150), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     description = db.Column(db.Text, nullable=True)
+    
+class Reminder(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    due_date = db.Column(db.Date, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
