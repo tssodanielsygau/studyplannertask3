@@ -19,6 +19,7 @@ def home():
         new_note = Note(data=note_text, user_id=current_user.id)
         db.session.add(new_note)
         db.session.commit()
+        flash("Note added!", "success")
         return jsonify({'success': True, 'note_id': new_note.id})
 
     # Handle AJAX Event Form Submission
@@ -47,10 +48,10 @@ def home():
         )
         db.session.add(new_event)
         db.session.commit()
+        flash("Event added!", "success")
 
-        # Return rendered event card HTML
         html = render_template("event_card.html", event=new_event)
-        return jsonify({'success': True, 'html': html})
+        return jsonify({'success': True, 'html': html, 'message': 'Event added!'})
 
     events = Event.query.filter_by(user_id=current_user.id).order_by(Event.date).all()
     return render_template("home.html", user=current_user, events=events)
@@ -64,6 +65,8 @@ def delete_event():
         db.session.delete(event)
         db.session.commit()
         flash("Event deleted.", "success")
+    else:
+        flash("Event not found or unauthorized.", "error")
     return redirect(url_for("views.home"))
 
 @views.route('/delete-note', methods=['POST'])
@@ -75,6 +78,7 @@ def delete_note():
     if note and note.user_id == current_user.id:
         db.session.delete(note)
         db.session.commit()
+        flash("Note deleted.", "success")
         return jsonify(success=True)
     return jsonify({'error': 'Unauthorized'}), 403
 
@@ -90,12 +94,14 @@ def edit_event(id):
     date_str = request.form.get('event_date')
     time = request.form.get('event_time')
     location = request.form.get('event_location')
+    description = request.form.get('event_description')
 
     try:
         event.title = title
         event.date = datetime.strptime(date_str, '%Y-%m-%d').date()
         event.time = time
         event.location = location
+        event.description = description
         db.session.commit()
         flash("Event updated!", "success")
     except Exception as e:

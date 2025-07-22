@@ -40,20 +40,22 @@ document.addEventListener("DOMContentLoaded", function () {
         const div = document.createElement("div");
         div.innerHTML = data.html;
         const newCard = div.firstElementChild;
+
+        // Set consistent layout properties
+        newCard.style.minWidth = "260px";
+        newCard.style.flex = "0 0 auto";
+
         const addCard = document.querySelector(".event-card[onclick]");
         grid.insertBefore(newCard, addCard);
-
-        // ✅ Fix layout/snap
-        const carousel = document.getElementById('carousel');
-        carousel.style.scrollSnapType = 'none';
-        void carousel.offsetWidth;
-        carousel.style.scrollSnapType = 'x mandatory';
-
-        // ✅ Optional: smooth scroll to new card
-        newCard.scrollIntoView({ behavior: 'smooth', inline: 'start' });
-
         form.reset();
         closeEventModal();
+
+        // Reflow layout and scroll to new card
+        setTimeout(() => {
+          newCard.scrollIntoView({ behavior: "smooth", inline: "start" });
+        }, 100);
+
+        if (data.message) showFlashMessage(data.message, 'success');
       } else {
         alert("Error adding event.");
       }
@@ -121,6 +123,7 @@ document.addEventListener("DOMContentLoaded", function () {
         `;
         notesList.prepend(newNote);
         noteInput.value = "";
+        showFlashMessage("Note added!", "success");
       } else {
         alert("Error adding note.");
       }
@@ -142,4 +145,11 @@ function scrollCarousel(direction) {
     left: direction * cardWidth * 4, // scroll 4 cards at a time
     behavior: 'smooth'
   });
+}
+
+function toggleDescription(id) {
+  const desc = document.getElementById(`desc-${id}`);
+  const btn = event.target;
+  desc.classList.toggle('clamp');
+  btn.textContent = desc.classList.contains('clamp') ? 'Read more' : 'Show less';
 }

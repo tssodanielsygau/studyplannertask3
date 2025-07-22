@@ -606,3 +606,36 @@ input::placeholder {
   box-shadow: 0 0 20px rgba(0,0,0,0.4);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+.flash-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  max-width: 90%;
+}
+
+.flash-message {
+  background-color: var(--accent-bg);
+  color: var(--text-primary);
+  padding: 1rem 1.5rem;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.2);
+  font-weight: 500;
+  opacity: 0.95;
+  transition: opacity 0.3s ease;
+}
+
+.flash-message.success {
+  border-left: 6px solid #4caf50;
+}
+
+.flash-message.info {
+  border-left: 6px solid #2196f3;
+}
+
+.flash-message.error {
+  border-left: 6px solid #f44336;
+}
