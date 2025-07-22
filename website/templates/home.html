@@ -38,6 +38,13 @@
       <div class="events-grid" style="flex: 2 1 600px;">
         {% if events %}
           {% for event in events %}
+            <div class="event-actions">
+            <form method="POST" action="/delete-event" style="display:inline;">
+              <input type="hidden" name="event_id" value="{{ event.id }}">
+              <button type="submit" class="delete-btn">🗑 Delete</button>
+            </form>
+              <a href="/edit-event/{{ event.id }}" class="edit-btn">✏ Edit</a>
+            </div>
             <div class="card event-card">
               <div style="background-color: #3a4142; color: white; padding: 10px; border-radius: 6px 6px 0 0; text-align: center;">
                 <div style="font-size: 14px;">{{ event.date.strftime('%b') }}</div>
@@ -184,6 +191,37 @@ function deleteNote(noteId) {
         alert("Failed to delete note.");
       }
     });
+}
+
+document.getElementById("note-form").addEventListener("submit", function (e) {
+  e.preventDefault();
+  const form = e.target;
+  const noteInput = form.querySelector("textarea[name='note']");
+  const note = noteInput.value.trim();
+  if (!note) return;
+
+  fetch("/", {
+    method: "POST",
+    body: JSON.stringify({ note }),
+    headers: { "Content-Type": "application/json" }
+  }).then(res => res.json())
+    .then(data => {
+      if (data.success && data.note_html) {
+        const ul = document.getElementById("notes");
+        ul.insertAdjacentHTML("beforeend", data.note_html);
+        noteInput.value = "";
+      } else {
+        alert("Error adding note.");
+      }
+    });
+});
+
+function openEventModal() {
+  document.getElementById('event-modal').style.display = 'flex';
+}
+
+function closeEventModal() {
+  document.getElementById('event-modal').style.display = 'none';
 }
 </script>
 

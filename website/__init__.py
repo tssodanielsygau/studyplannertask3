@@ -13,8 +13,8 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 
     db.init_app(app)
-    migrate.init_app(app, db)
-
+    migrate = Migrate(app, db)
+    
     from .views import views
     from .auth import auth
     from .models import User, Note  

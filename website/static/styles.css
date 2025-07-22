@@ -16,7 +16,6 @@
     box-sizing: border-box;
 }
 
-/* === Dark Mode Overrides === */
 .darkmode {
   --text-primary: #ffffff;
   --text-secondary: #cccccc;
@@ -62,7 +61,6 @@ body {
     }
 }
 
-/* CSS from section:header */
 .site-header {
     background-color: var(--bg-primary);
     border-bottom: 1px solid var(--border-color);
@@ -143,7 +141,6 @@ body {
     }
 }
 
-/* CSS from section:hero */
 .hero-section {
     padding-top: 29px;
     padding-bottom: 29px;
@@ -379,7 +376,6 @@ body {
     }
 }
 
-/* CSS from section:footer */
 .site-footer {
     padding-bottom: 24px;
 }
@@ -402,7 +398,6 @@ body {
     margin: 0;
 }
 
-/* === Theme Toggle Button === */
 #theme-switch {
   position: fixed;
   top: 20px;
@@ -433,7 +428,6 @@ body {
   display: block;
 }
 
-/* === Sidebar === */
 .sidebar {
   height: 100%;
   width: 0;
@@ -482,7 +476,7 @@ body {
 }
 
 .login-section {
-  min-height: calc(100vh - 64px); /* minus header */
+  min-height: calc(100vh - 64px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -536,12 +530,41 @@ input::placeholder {
   color: var(--text-secondary);
 }
 
-/* Today = green border */
 .today-event {
   border: 2px solid #3db97d;
 }
 
-/* This week = blue border */
 .week-event {
   border: 2px solid #7b8fff;
+}
+
+.modal {
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: var(--bg-primary);
+  padding: 20px;
+  border-radius: 12px;
+  position: relative;
+}
+
+.close {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--text-primary);
+  cursor: pointer;
 }
