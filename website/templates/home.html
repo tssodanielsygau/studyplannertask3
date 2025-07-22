@@ -181,11 +181,12 @@
     </div>
 
     <!-- RIGHT COLUMN -->
-    <section id="pomodoro" class="card pomodoro-card" style="padding: 1rem; max-height: 450px; overflow: hidden;">
+    <div class="main-column-right">
+      <section id="pomodoro" class="card pomodoro-card" style="padding: 1rem; max-height: 500px; overflow: hidden;">
         <h3 class="card-title-small">Pomodoro Timer:</h3>
         <div class="timer-widget">
           <div class="timer-display">
-            <span class="timer-label">SESSION</span>
+            <span class="timer-label" id="session-type">SESSION</span>
             <span class="timer-time" id="time-left">25:00</span>
           </div>
           <div class="timer-buttons">
@@ -209,6 +210,7 @@
         </div>
       </section>
 
+      <!-- NOTES -->
       <section id="notes" class="card notes-card">
         <ul id="notes" style="list-style: none; padding: 0; margin: 0 0 1rem 0;">
           {% for note in user.notes %}
@@ -220,7 +222,7 @@
           {% endfor %}
         </ul>
 
-        <form id="note-form" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <form id="note-form" style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: auto;">
           <textarea id="note-input" name="note" placeholder="Write your note here..." rows="3"
                     style="resize: none; padding: 0.75rem; font-size: 1rem; font-family: 'Inter', sans-serif;
                           border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--bg-primary);
@@ -234,6 +236,7 @@
           </button>
         </form>
       </section>
+    </div>
     </div>
   </div>
 </main>
